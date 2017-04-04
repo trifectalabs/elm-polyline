@@ -10,6 +10,7 @@ module Polyline exposing (encode, decode)
 import Bitwise exposing (shiftLeftBy, shiftRightBy, complement, and, or)
 import Char exposing (fromCode, toCode)
 import List.Extra exposing (foldl1)
+import Round
 import String exposing (fromChar, dropLeft)
 
 
@@ -68,7 +69,10 @@ encodeDiff diff =
             else
                 shifted
     in
-        encodeFiveBit toEncode ""
+        if (diff == 0) then
+            String.concat [ encodeFiveBit toEncode "", "?" ]
+        else
+            encodeFiveBit toEncode ""
 
 
 encodeFiveBit : Int -> String -> String
@@ -113,6 +117,17 @@ decode polyline =
             )
             []
         |> List.reverse
+        |> List.map (\( lat, lng ) -> ( roundFloat 5 lat, roundFloat 5 lng ))
+
+
+{-| This is ugly and needs to be fixed at some point
+-}
+roundFloat : Int -> Float -> Float
+roundFloat digits number =
+    number
+        |> Round.round digits
+        |> String.toFloat
+        |> Result.withDefault number
 
 
 decodeDiffs : String -> List ( Float, Float ) -> List ( Float, Float )
